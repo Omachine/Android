@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "107745836884",
+    "project_id": "shoppinglist-2ec15",
+    "storage_bucket": "shoppinglist-2ec15.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:107745836884:android:d90b60efad0853a28012c1",
+        "android_client_info": {
+          "package_name": "com.exercicios.shoppinglist"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAgkiJ_hTsnpVErIcn5gp1ZzmorwboJCdg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
