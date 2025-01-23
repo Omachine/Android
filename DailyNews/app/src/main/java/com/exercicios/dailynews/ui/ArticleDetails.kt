@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.viewinterop.AndroidView
 import com.exercicios.dailynews.models.Article
@@ -13,6 +14,8 @@ import com.exercicios.dailynews.models.Article
 
 @Composable
 fun ArticleDetail(modifier: Modifier, article: Article) {
+    val context = LocalContext.current
+
     Box(modifier = modifier.fillMaxSize()) {
         AndroidView(factory = { context ->
             WebView(context).apply {
@@ -21,10 +24,11 @@ fun ArticleDetail(modifier: Modifier, article: Article) {
                 settings.loadWithOverviewMode = true
                 settings.useWideViewPort = true
                 settings.setSupportZoom(true)
+                clearCache(true) // Clear the WebView cache
             }
         },
             update = { webView ->
-                webView.loadUrl(article.url!!)
+                webView.loadUrl(article.url)
             })
     }
 }

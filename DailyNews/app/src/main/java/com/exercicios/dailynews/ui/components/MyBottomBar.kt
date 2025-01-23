@@ -22,32 +22,34 @@ import com.exercicios.dailynews.Screen
 import com.exercicios.dailynews.ui.theme.DailyNewsTheme
 
 data class BottomNavigationItem(
-    var title: String,
-    var selectedIcon: ImageVector,
-    var unSelectedIcon: ImageVector,
-    var screen: Screen
+    var title : String,
+    var selectedIcon : ImageVector,
+    var unSelectedIcon : ImageVector,
+    var screen : Screen
 )
 
 @Composable
 fun MyBottomBar(
     navController: NavController
-) {
+){
+
     var selectedIndex by rememberSaveable { mutableIntStateOf(0) }
 
     val items = listOf(
         BottomNavigationItem(
             title = "Home",
             selectedIcon = Icons.Filled.Home,
-            unSelectedIcon = Icons.Outlined.Home,
+            unSelectedIcon =  Icons.Outlined.Home,
             screen = Screen.Home
         ),
         BottomNavigationItem(
             title = "Favorites",
             selectedIcon = Icons.Filled.Favorite,
-            unSelectedIcon = Icons.Filled.FavoriteBorder,
+            unSelectedIcon =  Icons.Filled.FavoriteBorder,
             screen = Screen.Favorites
         ),
     )
+
 
     BottomAppBar {
         items.forEachIndexed { index, item ->
@@ -62,19 +64,21 @@ fun MyBottomBar(
                 },
                 icon = {
                     Icon(
-                        imageVector = if (selectedIndex == index)
+                        imageVector = if ( selectedIndex == index)
                             item.selectedIcon else item.unSelectedIcon,
                         contentDescription = "Home"
                     )
                 }
             )
         }
+
     }
+
 }
 
 @Preview(showBackground = true)
 @Composable
-fun MyBottomBarPreview() {
+fun MyBottomBarPreview(){
     DailyNewsTheme {
         MyBottomBar(
             navController = rememberNavController()

@@ -1,6 +1,7 @@
 package com.exercicios.dailynews
 
 import android.app.Application
+import dagger.hilt.android.HiltAndroidApp
 
-class DailyNewsApp : Application() {
-}
+@HiltAndroidApp
+class DailyNewsApp : Application()

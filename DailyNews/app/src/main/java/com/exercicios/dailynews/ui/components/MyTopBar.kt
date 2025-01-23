@@ -1,8 +1,8 @@
 package com.exercicios.dailynews.ui.components
 
 import android.content.Intent
+import android.provider.Settings.Global
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
@@ -13,21 +13,23 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import com.exercicios.dailynews.database.AppDatabase
 import com.exercicios.dailynews.models.Article
 import com.exercicios.dailynews.ui.theme.DailyNewsTheme
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
-import com.google.firebase.firestore.FirebaseFirestore
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -37,10 +39,18 @@ fun MyTopAppBar(
     isBaseScreen: Boolean,
     article: Article?
 ) {
+    val context = LocalContext.current
     val scope = rememberCoroutineScope()
     var articleIsFavorite by remember { mutableStateOf(false) }
-    val firestore = FirebaseFirestore.getInstance()
-    val context = LocalContext.current
+
+    LaunchedEffect(article) {
+        article?.let {
+            scope.launch(Dispatchers.IO) {
+                val dbArticle = AppDatabase.getInstance(context)?.articleDao()?.loadByUrl(it.url)
+                articleIsFavorite = dbArticle != null
+            }
+        }
+    }
 
     TopAppBar(
         title = {
@@ -53,7 +63,7 @@ fun MyTopAppBar(
         navigationIcon = {
             if (!isBaseScreen) {
                 IconButton(onClick = { navController.popBackStack() }) {
-                    Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                    Icon(imageVector = Icons.Filled.ArrowBack, contentDescription = "Back")
                 }
             }
         },
@@ -62,8 +72,7 @@ fun MyTopAppBar(
                 IconButton(onClick = {
                     val sendIntent: Intent = Intent().apply {
                         action = Intent.ACTION_SEND
-                        putExtra(Intent.EXTRA_TEXT, article?.title)
-                        putExtra(Intent.EXTRA_SUBJECT, article?.description)
+                        putExtra(Intent.EXTRA_TEXT, "${article?.title}\n${article?.description}\n${article?.url}")
                         type = "text/plain"
                     }
                     context.startActivity(Intent.createChooser(sendIntent, null))
@@ -72,16 +81,15 @@ fun MyTopAppBar(
                 }
                 IconButton(onClick = {
                     scope.launch(Dispatchers.IO) {
-                        if (article != null) {
-                            firestore.collection("favorites")
-                                .document(article.url)
-                                .set(article)
-                                .addOnSuccessListener {
-                                    articleIsFavorite = true
-                                }
-                                .addOnFailureListener {
-                                    articleIsFavorite = false
-                                }
+                        article?.let {
+                            val articleDao = AppDatabase.getInstance(context)?.articleDao()
+                            if (articleIsFavorite) {
+                                articleDao?.delete(it)
+                                articleIsFavorite = false
+                            } else {
+                                articleDao?.insert(it)
+                                articleIsFavorite = true
+                            }
                         }
                     }
                 }) {
@@ -97,16 +105,16 @@ fun MyTopAppBar(
 
 @Preview(showBackground = true)
 @Composable
-fun MyTopBarPreview() {
+fun MyTopBarPreview(){
     DailyNewsTheme {
         MyTopAppBar(
             navController = rememberNavController(),
-            title = "Test Title",
+            "Test Title",
             isBaseScreen = false,
             article = Article(
                 title = "news title",
                 url = ""
-            )
-        )
+
+            ))
     }
 }

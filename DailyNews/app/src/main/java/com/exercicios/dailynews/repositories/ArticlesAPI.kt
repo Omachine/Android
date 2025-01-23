@@ -1,6 +1,8 @@
 package com.exercicios.dailynews.repositories
 
 import com.exercicios.dailynews.models.Article
+import com.exercicios.dailynews.ui.home.ArticlesState
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.suspendCancellableCoroutine
 import okhttp3.Call
 import okhttp3.Callback
@@ -15,45 +17,55 @@ import kotlin.jvm.Throws
 
 const val BASE_API = "https://newsapi.org/v2/"
 const val API_KEY = "&apiKey=e668555fa816429087813696b3dffdfb"
+const val MAX_RETRIES = 3
+const val RETRY_DELAY = 2000L // 2 seconds
 
 object ArticlesAPI {
 
     val client = OkHttpClient()
 
-    //top-headlines?country=us
     @Throws(IOException::class)
-    suspend fun fetchArticle(path : String) : List<Article> {
+    suspend fun fetchArticle(path: String): List<Article> {
+        var attempt = 0
+        while (attempt < MAX_RETRIES) {
+            try {
+                val request = Request.Builder()
+                    .url("$BASE_API$path$API_KEY")
+                    .build()
 
-        val request = Request.Builder()
-            .url("$BASE_API$path$API_KEY")
-            .build()
+                val resultRequest = client.newCall(request).await()
 
-        val resultRequest = client.newCall(request).await()
+                if (!resultRequest.isSuccessful) throw IOException("Unexpected code ${resultRequest.networkResponse}")
 
-        if (!resultRequest.isSuccessful) throw IOException("Unexpected code ${resultRequest.networkResponse}")
+                val articlesResult = arrayListOf<Article>()
+                val result = resultRequest.body!!.string()
+                val jsonResult = JSONObject(result)
+                val status = jsonResult.getString("status")
+                if (status == "ok") {
+                    val articlesJson = jsonResult.getJSONArray("articles")
+                    for (index in 0 until articlesJson.length()) {
+                        val articleJson = articlesJson.getJSONObject(index)
+                        val article = Article.fromJson(articleJson)
+                        articlesResult.add(article)
+                    }
+                }
 
-        val articlesResult = arrayListOf<Article>()
-        val result = resultRequest.body!!.string()
-        val jsonResult = JSONObject(result)
-        val status = jsonResult.getString("status")
-        if (status == "ok") {
-            val articlesJson = jsonResult.getJSONArray("articles")
-            for (index in 0 until articlesJson.length()) {
-                val articleJson = articlesJson.getJSONObject(index)
-                val article = Article.fromJson(articleJson)
-                articlesResult.add(article)
+                return articlesResult
+            } catch (e: IOException) {
+                attempt++
+                if (attempt >= MAX_RETRIES) {
+                    throw e
+                }
+                delay(RETRY_DELAY)
             }
         }
-
-        return articlesResult
+        throw IOException("Failed to fetch articles after $MAX_RETRIES attempts")
     }
 }
 
 suspend fun Call.await(recordStack: Boolean = false): Response {
     val callStack = if (recordStack) {
         IOException().apply {
-            // Remove unnecessary lines from stacktrace
-            // This doesn't remove await$default, but better than nothing
             stackTrace = stackTrace.copyOfRange(1, stackTrace.size)
         }
     } else {
@@ -66,7 +78,6 @@ suspend fun Call.await(recordStack: Boolean = false): Response {
             }
 
             override fun onFailure(call: Call, e: IOException) {
-                // Don't bother with resuming the continuation if it is already cancelled.
                 if (continuation.isCancelled) return
                 callStack?.initCause(e)
                 continuation.resumeWithException(callStack ?: e)
@@ -77,7 +88,7 @@ suspend fun Call.await(recordStack: Boolean = false): Response {
             try {
                 cancel()
             } catch (ex: Throwable) {
-                //Ignore cancel exception
+                // Ignore cancel exception
             }
         }
     }
