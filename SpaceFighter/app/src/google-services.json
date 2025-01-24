@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "236977338452",
+    "project_id": "spacefighters-51ca4",
+    "storage_bucket": "spacefighters-51ca4.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:236977338452:android:6355b6dde05781dfb915c1",
+        "android_client_info": {
+          "package_name": "com.exercicios.spacefighter"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCFKlxzk_78JTR6A2XUviAk9FRKMy4JWRk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
